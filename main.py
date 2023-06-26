@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import messagebox
 from random import choice, randint, shuffle
 import pyperclip
+import json
 
 WHITE = "white"
 BLACK = "black"
@@ -34,23 +35,56 @@ def generate_password():
     pyperclip.copy(password)
 
 
+def search():
+    entry = website_entry.get()
+    website = entry.lower()
+    if len(website) == 0:
+        return messagebox.showwarning(title="Ops!", message="Website cannot be empty")
+    try:
+        with open("data.json", "r") as data_file:
+            json.load(data_file)
+    except FileNotFoundError:
+        messagebox.showwarning(title="Not Found", message="Data file not found")
+    except KeyError:
+        messagebox.showinfo(title="Ops!", message="Website not found")
+    else:
+        with open("data.json", mode="r") as data_file:
+            data = json.load(data_file)
+            result = data[website]
+            messagebox.showinfo(title="Amazon", message=f"Email: {result['email']}\n "
+                                                        f"Password: {result['password']}")
+
+
 # ---------------------------- SAVE PASSWORD ------------------------------- #
 def save():
-    website = website_entry.get()
+    entry = website_entry.get()
+    website = entry.lower()
     email = email_entry.get()
     password = password_entry.get()
+    new_data = {
+        website: {
+            "email": email,
+            "password": password
+        }
+    }
 
     if len(website) == 0 or len(password) == 0:
-        return messagebox.showwarning(message="Do not leave any field empty!")
+        return messagebox.showwarning(title="Ops!", message="Do not leave any field empty!")
 
-    is_ok = messagebox.askokcancel(title=website, message=f"These are the entered details: \nEmail: {email}"
-                                                          f"\nPassword: {password} \n Is it ok to save?")
-    if is_ok:
-        with open("data.txt", mode="a") as data_file:
-            data_file.write(f"{website} | {email} | {password}\n")
-            website_entry.delete(0, END)
-            password_entry.delete(0, END)
-            messagebox.showinfo(message="Password added to manager")
+    try:
+        with open("data.json", "r") as file_data:
+            data = json.load(file_data)
+    except FileNotFoundError:
+        with open("data.json", "w") as data_file:
+            json.dump(new_data, data_file, indent=4)
+    else:
+        data.update(new_data)
+        with open("data.json", "w") as data_file:
+            json.dump(data, data_file, indent=4)
+    finally:
+        website_entry.delete(0, END)
+        password_entry.delete(0, END)
+        messagebox.showinfo(message="Password added to manager")
 
 
 # ---------------------------- UI SETUP ------------------------------- #
@@ -60,8 +94,10 @@ canvas.create_image(100, 100, image=image)
 canvas.grid(row=0, column=1)
 
 Label(text="Website:", bg=WHITE, fg=BLACK).grid(row=1, column=0)
-website_entry = Entry(bg=WHITE, fg=BLACK, highlightthickness=1, highlightcolor=BLUE, width=35)
-website_entry.grid(row=1, column=1, columnspan=2)
+website_entry = Entry(bg=WHITE, fg=BLACK, highlightthickness=1, highlightcolor=BLUE, width=21)
+website_entry.grid(row=1, column=1)
+search_button = Button(text="Search", highlightbackground=WHITE, command=search, width=10)
+search_button.grid(row=1, column=2)
 
 Label(text="Email/Username:", bg=WHITE, fg=BLACK).grid(row=2, column=0)
 email_entry = Entry(bg=WHITE, fg=BLACK, highlightthickness=1, highlightcolor=BLUE, width=35)
