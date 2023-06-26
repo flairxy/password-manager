@@ -50,6 +50,7 @@ def save():
             data_file.write(f"{website} | {email} | {password}\n")
             website_entry.delete(0, END)
             password_entry.delete(0, END)
+            messagebox.showinfo(message="Password added to manager")
 
 
 # ---------------------------- UI SETUP ------------------------------- #
